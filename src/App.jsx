@@ -2,10 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, query, onSnapshot, doc, setDoc, getDoc } from 'firebase/firestore';
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Bell, BookOpen, Shield, AlertCircle, TrendingUp, MessageCircle, Gavel, ChevronLeft, ChevronRight, Calendar, Archive } from "lucide-react";
 
 // --- Helper Components ---
@@ -43,7 +39,6 @@ function AIContentRenderer({ content }) {
     if (!content) return null;
 
     if (Array.isArray(content)) {
-        // NEW: Handles array of objects with {header, text} for steps 1-3
         if (content.length > 0 && typeof content[0] === 'object' && content[0] !== null && 'header' in content[0]) {
             return (
                 <div className="text-white space-y-2">
@@ -56,7 +51,6 @@ function AIContentRenderer({ content }) {
             );
         }
 
-        // Handles array of strings (for implementation steps in step 6)
         return (
             <div className="text-white space-y-2">
                 {content.map((item, index) => {
@@ -76,7 +70,6 @@ function AIContentRenderer({ content }) {
     }
 
     if (typeof content === 'object' && content !== null && !React.isValidElement(content)) {
-        // Handles the specific structure for Step 6
         if (content.recommendationSummary && content.implementationSteps) {
             return (
                 <div className="space-y-4">
@@ -91,7 +84,6 @@ function AIContentRenderer({ content }) {
             );
         }
 
-        // Handles expandable options for Step 4 and 5
         return (
             <div>
                 {Object.entries(content).map(([key, value]) => (
@@ -129,7 +121,6 @@ function AIContentRenderer({ content }) {
         return content;
     }
 
-    // Handles simple string content with bolding
     const lines = String(content).split('\n').filter(line => line.trim() !== '');
     return (
         <div className="text-white space-y-2">
@@ -165,8 +156,8 @@ function HandbookVulnerabilitiesCard({ sections }) {
     ];
 
     return (
-        <Card className="shadow-2xl border-0 rounded-2xl mb-6" style={{ background: "#4B5C64" }}>
-            <CardContent className="p-6" style={{ color: "#fff" }}>
+        <div className="shadow-2xl border-0 rounded-2xl mb-6" style={{ background: "#4B5C64" }}>
+            <div className="p-6" style={{ color: "#fff" }}>
                 <h2 className="text-xl font-bold" style={{ color: "#fff" }}>Handbook Vulnerabilities</h2>
                 <div className="mt-4 text-white space-y-4">
                     <p className="font-semibold">"Real-Time Vulnerability Monitoring - Continuous Policy Protection & Risk Alerts"</p>
@@ -174,18 +165,18 @@ function HandbookVulnerabilitiesCard({ sections }) {
                     <p>Unlike static annual reviews, this system provides ongoing protection by instantly flagging policy gaps, regulatory changes, and compliance risks as they develop.</p>
                 </div>
                 <div className="mt-6">
-                    <Button 
+                    <button 
                         className="bg-blue-700 text-white font-semibold px-5 py-2 rounded-lg shadow hover:bg-blue-800 w-full mb-2"
                         onClick={() => setIsVulnerabilitiesRevealed(!isVulnerabilitiesRevealed)}
                     >
                         {isVulnerabilitiesRevealed ? "Close Vulnerabilities" : "Show All Vulnerabilities"}
-                    </Button>
-                    <Button 
+                    </button>
+                    <button 
                         className="bg-blue-700 text-white font-semibold px-5 py-2 rounded-lg shadow hover:bg-blue-800 w-full"
                         onClick={() => setIsMonitoringSystemRevealed(!isMonitoringSystemRevealed)}
                     >
                         {isMonitoringSystemRevealed ? "Close" : "Our Continuous Monitoring System"}
-                    </Button>
+                    </button>
                 </div>
                 {isVulnerabilitiesRevealed && (
                     <div className="mt-4 text-white border-t border-gray-500 pt-4">
@@ -215,8 +206,8 @@ function HandbookVulnerabilitiesCard({ sections }) {
                         <p className="italic mt-4 text-sm">The result: Your handbook policies are protected by continuous intelligence, ensuring vulnerabilities are identified and addressed before they become compliance issues or legal risks.</p>
                     </div>
                 )}
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     );
 }
 
@@ -263,19 +254,19 @@ function CalendarModal({ auditType, onClose }) {
                     <Calendar className="text-blue-400" size={20}/> Select date for {auditType} audit
                 </h3>
                 <div className="flex justify-between items-center mb-3">
-                    <Button onClick={() => setDate(new Date(date.setMonth(date.getMonth() - 1)))} variant="ghost" size="sm"><ChevronLeft /></Button>
+                    <button onClick={() => setDate(new Date(date.setMonth(date.getMonth() - 1)))} className="p-1 rounded-md hover:bg-gray-600"><ChevronLeft /></button>
                     <div className="font-semibold">{date.toLocaleString('default', { month: 'long', year: 'numeric' })}</div>
-                    <Button onClick={() => setDate(new Date(date.setMonth(date.getMonth() + 1)))} variant="ghost" size="sm"><ChevronRight /></Button>
+                    <button onClick={() => setDate(new Date(date.setMonth(date.getMonth() + 1)))} className="p-1 rounded-md hover:bg-gray-600"><ChevronRight /></button>
                 </div>
                 <div className="grid grid-cols-7 gap-1 text-xs">
                     {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => <div key={day} className="font-bold text-center text-gray-400">{day}</div>)}
                     {renderCalendar()}
                 </div>
                 <div className="flex justify-end gap-2 mt-4">
-                    <Button variant="outline" onClick={onClose} className="rounded-lg px-4 py-1 text-sm bg-gray-600 hover:bg-gray-500 border-gray-500">Cancel</Button>
-                    <Button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-1 text-sm rounded-lg" onClick={() => { console.log(`Scheduled ${auditType} audit for ${selectedDate}`); onClose(); }}>
+                    <button className="rounded-lg px-4 py-1 text-sm bg-gray-600 hover:bg-gray-500 border border-gray-500" onClick={onClose}>Cancel</button>
+                    <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-1 text-sm rounded-lg" onClick={() => { console.log(`Scheduled ${auditType} audit for ${selectedDate}`); onClose(); }}>
                         Schedule Audit
-                    </Button>
+                    </button>
                 </div>
             </div>
         </div>
@@ -304,8 +295,8 @@ function HandbookAuditCard() {
 
     return (
         <>
-            <Card className="shadow-2xl border-0 rounded-2xl mb-6" style={{ background: "#4B5C64" }}>
-                <CardContent className="p-6" style={{ color: "#fff" }}>
+            <div className="shadow-2xl border-0 rounded-2xl mb-6" style={{ background: "#4B5C64" }}>
+                <div className="p-6" style={{ color: "#fff" }}>
                     <h2 className="text-xl font-bold" style={{ color: "#fff" }}>Handbook Audit</h2>
                     <div className="mt-4 text-white space-y-4">
                         <p className="font-semibold">"Comprehensive Handbook Intelligence Audit - Ensuring Policy Excellence & Legal Compliance"</p>
@@ -313,20 +304,20 @@ function HandbookAuditCard() {
                         <p>Our quarterly/annual audit process identifies policy gaps, regulatory updates, and emerging compliance requirements to ensure your handbook remains current, legally sound, and aligned with best practices.</p>
                     </div>
                     <div className="flex gap-4 mt-6">
-                        <Button className="bg-blue-700 text-white font-semibold px-5 py-2 rounded-lg shadow hover:bg-blue-800" onClick={() => openCalendar('Quarterly')}>
+                        <button className="bg-blue-700 text-white font-semibold px-5 py-2 rounded-lg shadow hover:bg-blue-800" onClick={() => openCalendar('Quarterly')}>
                             Audit Quarterly
-                        </Button>
-                        <Button className="bg-blue-700 text-white font-semibold px-5 py-2 rounded-lg shadow hover:bg-blue-800" onClick={() => openCalendar('Annual')}>
+                        </button>
+                        <button className="bg-blue-700 text-white font-semibold px-5 py-2 rounded-lg shadow hover:bg-blue-800" onClick={() => openCalendar('Annual')}>
                             Audit Annually
-                        </Button>
+                        </button>
                     </div>
                     <div className="mt-4">
-                         <Button 
+                         <button 
                             className="bg-blue-700 text-white font-semibold px-5 py-2 rounded-lg shadow hover:bg-blue-800"
                             onClick={() => setIsProcessRevealed(!isProcessRevealed)}
                         >
                             {isProcessRevealed ? "Close" : "Our 6-Stage Audit Process"}
-                        </Button>
+                        </button>
                         {isProcessRevealed && (
                             <div className="mt-4 text-white space-y-4 border-t border-gray-500 pt-4">
                                 {auditProcess.map((item, index) => (
@@ -338,8 +329,8 @@ function HandbookAuditCard() {
                             </div>
                         )}
                     </div>
-                </CardContent>
-            </Card>
+                </div>
+            </div>
             {showCalendar && <CalendarModal auditType={auditType} onClose={() => setShowCalendar(false)} />}
         </>
     );
@@ -365,9 +356,9 @@ function ReportViewerModal({ report, scenarios, onClose }) {
             <div className="bg-gray-900 p-6 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4 py-2">
                     <h2 className="text-2xl font-bold text-white">Incident Report</h2>
-                    <Button onClick={onClose} className="bg-red-500 hover:bg-red-600 text-white rounded-full p-2 h-8 w-8 flex items-center justify-center">
+                    <button onClick={onClose} className="bg-red-500 hover:bg-red-600 text-white rounded-full p-2 h-8 w-8 flex items-center justify-center">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                    </Button>
+                    </button>
                 </div>
 
                 <div className="bg-gray-700 p-6 rounded-lg shadow-inner">
@@ -398,16 +389,16 @@ function ArchivedReportsCard({ reports, onViewReport }) {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
-        <Card className="shadow-2xl border-0 rounded-2xl mt-6" style={{ background: "#4B5C64" }}>
-            <CardContent className="p-6" style={{ color: "#fff" }}>
+        <div className="shadow-2xl border-0 rounded-2xl mt-6" style={{ background: "#4B5C64" }}>
+            <div className="p-6" style={{ color: "#fff" }}>
                 <h2 className="text-xl font-bold" style={{ color: "#fff" }}>Archived Incident Reports</h2>
                 <div className="mt-4">
-                    <Button
+                    <button
                         className="bg-blue-700 text-white font-semibold px-5 py-2 rounded-lg shadow hover:bg-blue-800 w-full"
                         onClick={() => setIsOpen(!isOpen)}
                     >
                         {isOpen ? "Close" : "Reports"}
-                    </Button>
+                    </button>
                 </div>
                 {isOpen && (
                     <div className="mt-4 border-t border-gray-500 pt-4 space-y-2 max-h-60 overflow-y-auto">
@@ -423,8 +414,8 @@ function ArchivedReportsCard({ reports, onViewReport }) {
                         )) : <p>No reports archived yet.</p>}
                     </div>
                 )}
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     );
 }
 
@@ -681,11 +672,11 @@ function RiskAssessmentCenter({ handbookText, handbookIndex }) {
 
         return (
             <div>
-                <Card
+                <div
                     className="shadow-2xl border-0 rounded-2xl"
                     style={{ background: "#4B5C64" }}
                 >
-                    <CardContent className="p-6 space-y-4 rounded-2xl" style={{ color: "#fff" }}>
+                    <div className="p-6 space-y-4 rounded-2xl" style={{ color: "#fff" }}>
                         <h2 className="text-xl font-semibold" style={{ color: "#faecc4" }}>{`Step ${stepNumber}: ${title}`}</h2>
                         
                         {isOpen && (
@@ -695,24 +686,24 @@ function RiskAssessmentCenter({ handbookText, handbookIndex }) {
                                      <div className="border-t border-gray-600 mt-6 pt-6"> 
                                         <h3 className="text-lg font-semibold text-[#faecc4] mb-2 flex items-center"><Gavel className="w-5 h-5 mr-2"/>Get Direct Legal Help</h3> 
                                         <div className="mb-3 text-sm"> Reach out for legal advice about this issue. Begin by adding a brief overview below, and click submit to schedule a phone conference.<br /> <span className="text-blue-400 text-xs">(Annual Legal Counsel Credits will be applied if applicable.)</span> </div> 
-                                        <Textarea className="w-full min-h-[100px] border rounded-md mb-2" placeholder={`Add any additional details for the legal team regarding: "${issue}"`} style={{ background: "#fff", color: "#222", border: "2px solid #faecc4" }} /> 
-                                        <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg mt-2" > Submit &amp; Schedule Call </Button> 
+                                        <textarea className="w-full min-h-[100px] border rounded-md mb-2 p-2 text-black" placeholder={`Add any additional details for the legal team regarding: "${issue}"`} style={{ background: "#fff", border: "2px solid #faecc4" }} /> 
+                                        <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg mt-2" > Submit &amp; Schedule Call </button> 
                                     </div> 
                                 )}
                              </div>
                         )}
 
                         <div className="flex justify-start mt-4">
-                            <Button
+                            <button
                                 onClick={handleToggle}
                                 disabled={isAnalyzing}
                                 className={`px-5 py-2 font-semibold text-white rounded-md shadow-md transition-all ${isAnalyzing ? "bg-gray-500 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`}
                             >
                                 {buttonText}
-                            </Button>
+                            </button>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
             </div>
         );
     }
@@ -722,18 +713,17 @@ function RiskAssessmentCenter({ handbookText, handbookIndex }) {
             <h1 className="text-3xl font-bold text-center">Incident Risk Assessment & Mitigation System</h1>
             
             <div className="flex justify-center gap-2 mb-4">
-                <Button onClick={() => handleScenarioButtonClick('parentComplaint')} className={viewMode === 'demo' && issue.includes('suspension') ? 'bg-blue-700 text-white' : 'bg-gray-300 text-black'}>Parent Complaint Scenario</Button>
-                <Button onClick={() => handleScenarioButtonClick('facultyLeave')} className={viewMode === 'demo' && issue.includes('sick days') ? 'bg-blue-700 text-white' : 'bg-gray-300 text-black'}>Faculty Leave Scenario</Button>
+                <button onClick={() => handleScenarioButtonClick('parentComplaint')} className={`px-4 py-2 rounded-md ${viewMode === 'demo' && issue.includes('suspension') ? 'bg-blue-700 text-white' : 'bg-gray-300 text-black'}`}>Parent Complaint Scenario</button>
+                <button onClick={() => handleScenarioButtonClick('facultyLeave')} className={`px-4 py-2 rounded-md ${viewMode === 'demo' && issue.includes('sick days') ? 'bg-blue-700 text-white' : 'bg-gray-300 text-black'}`}>Faculty Leave Scenario</button>
             </div>
 
-            <Card className="shadow-2xl border-2 border-blue-100 rounded-2xl" style={{ background: "#4B5C64" }}>
-                <CardContent className="p-6 space-y-4 rounded-2xl" style={{ background: "#4B5C64", color: "#fff" }}>
+            <div className="shadow-2xl border-2 border-blue-100 rounded-2xl" style={{ background: "#4B5C64" }}>
+                <div className="p-6 space-y-4 rounded-2xl" style={{ background: "#4B5C64", color: "#fff" }}>
                     <label className="block font-medium">Describe Details of the Complaint or Issue</label>
-                    <Textarea
-                        className="w-full min-h-[140px] border-2 rounded-xl shadow-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                    <textarea
+                        className="w-full min-h-[140px] border-2 rounded-xl shadow-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-200 transition-all duration-200 p-2 text-black"
                         style={{
                             background: "#fff",
-                            color: "#111",
                             borderColor: "#ffd700",
                             boxShadow: "0 6px 32px 0 rgba(60,60,60,0.10), 0 1.5px 8px 0 rgba(60,60,60,0.08)"
                         }}
@@ -742,16 +732,16 @@ function RiskAssessmentCenter({ handbookText, handbookIndex }) {
                         onChange={(e) => setIssue(e.target.value)}
                     />
                     <div className="flex justify-center">
-                        <Button
+                        <button
                             onClick={handleGenerate}
                             disabled={loading}
                             className={`mt-4 px-6 py-2 text-lg font-semibold text-white rounded-md shadow-md ${loading ? "bg-blue-300" : "bg-blue-600 hover:bg-blue-700"}`}
                         >
                             {loading ? "Generating..." : "Get Full Risk & Response Analysis"}
-                        </Button>
+                        </button>
                     </div>
-                </CardContent>
-            </Card>
+                </div>
+            </div>
 
             {responseGenerated && generatedSteps && (
                 <div className="space-y-6">
@@ -770,8 +760,8 @@ function RiskAssessmentCenter({ handbookText, handbookIndex }) {
                         Object.keys(generatedSteps).map((stepKey) => (
                             generatedSteps[stepKey] && generatedSteps[stepKey].title && (
                                 <div key={stepKey}>
-                                    <Card className="shadow-2xl border-0 rounded-2xl" style={{ background: "#4B5C64" }}>
-                                        <CardContent className="p-6 space-y-4 rounded-2xl" style={{ color: "#fff" }}>
+                                    <div className="shadow-2xl border-0 rounded-2xl" style={{ background: "#4B5C64" }}>
+                                        <div className="p-6 space-y-4 rounded-2xl" style={{ color: "#fff" }}>
                                             <h2 className="text-xl font-semibold" style={{ color: "#faecc4" }}>
                                                 {`Step ${parseInt(stepKey.replace('step', ''))}: ${generatedSteps[stepKey].title}`}
                                             </h2>
@@ -781,13 +771,13 @@ function RiskAssessmentCenter({ handbookText, handbookIndex }) {
                                                      <div className="border-t border-gray-600 mt-6 pt-6"> 
                                                         <h3 className="text-lg font-semibold text-[#faecc4] mb-2 flex items-center"><Gavel className="w-5 h-5 mr-2"/>Get Direct Legal Help</h3> 
                                                         <div className="mb-3 text-sm"> Reach out for legal advice about this issue. Begin by adding a brief overview below, and click submit to schedule a phone conference.<br /> <span className="text-blue-400 text-xs">(Annual Legal Counsel Credits will be applied if applicable.)</span> </div> 
-                                                        <Textarea className="w-full min-h-[100px] border rounded-md mb-2" placeholder={`Add any additional details for the legal team regarding: "${issue}"`} style={{ background: "#fff", color: "#222", border: "2px solid #faecc4" }} /> 
-                                                        <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg mt-2" > Submit &amp; Schedule Call </Button> 
+                                                        <textarea className="w-full min-h-[100px] border rounded-md mb-2 p-2 text-black" placeholder={`Add any additional details for the legal team regarding: "${issue}"`} style={{ background: "#fff", border: "2px solid #faecc4" }} /> 
+                                                        <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg mt-2" > Submit &amp; Schedule Call </button> 
                                                     </div> 
                                                 )}
                                             </div>
-                                        </CardContent>
-                                    </Card>
+                                        </div>
+                                    </div>
                                 </div>
                             )
                         ))
@@ -867,8 +857,8 @@ function IndustryQuestionsCard() {
         : industryQuestions.filter(q => q.category === selectedTopic);
 
     return (
-        <Card className="shadow-2xl border-0 rounded-2xl" style={{ background: "#4B5C64", color: "#fff" }}>
-            <CardContent className="p-6">
+        <div className="shadow-2xl border-0 rounded-2xl" style={{ background: "#4B5C64", color: "#fff" }}>
+            <div className="p-6">
                 <SectionHeader icon={<TrendingUp className="text-[#faecc4]" size={26} />} title="Current Industry Questions" />
                 <div className="mb-6 text-white font-bold space-y-2">
                     <p>Below are current questions related to industry trends and legislation that are identified on an ongoing basis as the Micro Utility monitors a large number of resources relevant to the industry.</p>
@@ -876,13 +866,13 @@ function IndustryQuestionsCard() {
                 </div>
                 <div className="flex flex-col items-start space-y-2 mb-6">
                     {topics.map(topic => (
-                        <Button
+                        <button
                             key={topic}
                             onClick={() => setSelectedTopic(topic)}
-                            className={`transition-all rounded-lg ${selectedTopic === topic ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+                            className={`px-3 py-1 rounded-lg transition-all ${selectedTopic === topic ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
                         >
                             {topic}
-                        </Button>
+                        </button>
                     ))}
                 </div>
                 <div className="space-y-2 max-h-96 overflow-y-scroll pr-2">
@@ -891,13 +881,13 @@ function IndustryQuestionsCard() {
                             <div className="p-2 bg-gray-700 rounded-lg">
                                 <p className="font-semibold">{q.question}</p>
                                 <div className="mt-2">
-                                    <Button
+                                    <button
                                         onClick={() => handleAnalyze(q.id)}
                                         className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-1 rounded-lg text-xs"
                                         disabled={analyzingQuestionId === q.id}
                                     >
                                         {analyzingQuestionId === q.id ? 'Analyzing...' : (revealedAnswers[q.id] ? 'Close' : 'Analyze for Solution')}
-                                    </Button>
+                                    </button>
                                 </div>
                                 {revealedAnswers[q.id] && (
                                     <div className="mt-3 p-3 bg-gray-800 rounded-md border-l-4 border-blue-400">
@@ -909,8 +899,8 @@ function IndustryQuestionsCard() {
                         </React.Fragment>
                     ))}
                 </div>
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     );
 }
 
@@ -981,30 +971,32 @@ export default function App() { // Renamed from SchoolShieldDashboard to App
 
     useEffect(() => {
         try {
-            const app = initializeApp(firebaseConfig);
-            const authInstance = getAuth(app);
-            const dbInstance = getFirestore(app);
-            setDb(dbInstance);
-            setAuth(authInstance);
+            if (Object.keys(firebaseConfig).length > 0) {
+                const app = initializeApp(firebaseConfig);
+                const authInstance = getAuth(app);
+                const dbInstance = getFirestore(app);
+                setDb(dbInstance);
+                setAuth(authInstance);
 
-            const unsubscribe = onAuthStateChanged(authInstance, async (user) => {
-                if (user) {
-                    setUserId(user.uid);
-                } else {
-                    try {
-                        if (initialAuthToken) {
-                            await signInWithCustomToken(authInstance, initialAuthToken);
-                        } else {
-                            await signInAnonymously(authInstance);
+                const unsubscribe = onAuthStateChanged(authInstance, async (user) => {
+                    if (user) {
+                        setUserId(user.uid);
+                    } else {
+                        try {
+                            if (initialAuthToken) {
+                                await signInWithCustomToken(authInstance, initialAuthToken);
+                            } else {
+                                await signInAnonymously(authInstance);
+                            }
+                        } catch (error) {
+                            console.error("Error during sign-in:", error);
                         }
-                    } catch (error) {
-                        console.error("Error during sign-in:", error);
                     }
-                }
-                setIsAuthReady(true);
-            });
+                    setIsAuthReady(true);
+                });
 
-            return () => unsubscribe();
+                return () => unsubscribe();
+            }
         } catch (error) {
             console.error("Firebase initialization failed:", error);
         }
@@ -1102,9 +1094,35 @@ export default function App() { // Renamed from SchoolShieldDashboard to App
         setCurrentAnswer(null);
         setHosQaQuestion("");
 
+        const prompt = `As an expert on school administration, answer the following question: "${questionText}". Format the response as a JSON object with a single key "answer" which is an array of objects. Each object should have a "header" key (a short, bolded topic like "**Policy Development:**") and a "text" key (the detailed explanation).`;
+
+        const hosQaSchema = {
+            type: "OBJECT",
+            properties: {
+                "answer": {
+                    type: "ARRAY",
+                    items: {
+                        type: "OBJECT",
+                        properties: {
+                            "header": { "type": "STRING" },
+                            "text": { "type": "STRING" }
+                        },
+                        required: ["header", "text"]
+                    }
+                }
+            },
+            required: ["answer"]
+        };
+
         try {
-            let chatHistory = [{ role: "user", parts: [{ text: `As an expert on school administration, answer the following question: ${questionText}` }] }];
-            const payload = { contents: chatHistory };
+            let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+            const payload = { 
+                contents: chatHistory,
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: hosQaSchema
+                }
+            };
             const apiKey = "";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
@@ -1119,15 +1137,16 @@ export default function App() { // Renamed from SchoolShieldDashboard to App
             }
 
             const result = await response.json();
-            if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
-                const text = result.candidates[0].content.parts[0].text;
-                setCurrentAnswer(text);
+            if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
+                const jsonText = result.candidates[0].content.parts[0].text;
+                const parsedAnswer = JSON.parse(jsonText);
+                setCurrentAnswer(parsedAnswer.answer);
             } else {
                 throw new Error("Invalid response structure from API");
             }
         } catch (error) {
             console.error("Error generating AI response:", error);
-            setCurrentAnswer("Sorry, I encountered an error while generating a response. Please try again.");
+            setCurrentAnswer([{ header: "Error", text: "Sorry, I encountered an error while generating a response. Please try again." }]);
         } finally {
             setIsAnalyzing(false);
         }
@@ -1182,7 +1201,7 @@ export default function App() { // Renamed from SchoolShieldDashboard to App
         setLegalAnswer(null);
         setLegalQuestion("");
 
-        const prompt = `Analyze the following legal question for a school administrator and provide a structured response. The question is: "${questionText}". Please format your response as a JSON object with three keys: "guidance", "references", and "risk". The "risk" key should contain an object with "level", "analysis", and "recommendation".`;
+        const prompt = `Analyze the following legal question for a school administrator and provide a structured response. The question is: "${questionText}". Please format your response as a JSON object with three keys: "guidance", "references", and "risk". The "risk" key should contain an object with "level", "analysis", and "recommendation". The "recommendation" value MUST be an array of strings, where each string is a single, numbered step.`;
         
         const legalResponseSchema = {
             type: "OBJECT",
@@ -1194,7 +1213,7 @@ export default function App() { // Renamed from SchoolShieldDashboard to App
                     properties: {
                         "level": { "type": "STRING" },
                         "analysis": { "type": "STRING" },
-                        "recommendation": { "type": "STRING" }
+                        "recommendation": { "type": "ARRAY", "items": { "type": "STRING" } }
                     },
                     required: ["level", "analysis", "recommendation"]
                 }
@@ -1237,7 +1256,7 @@ export default function App() { // Renamed from SchoolShieldDashboard to App
             setLegalAnswer({
                 guidance: "Sorry, I encountered an error. Please ensure your question is clear and try again.",
                 references: "N/A",
-                risk: { level: "Unknown", analysis: "Could not analyze risk due to an error.", recommendation: "Please rephrase your question or contact legal counsel directly." }
+                risk: { level: "Unknown", analysis: "Could not analyze risk due to an error.", recommendation: ["Please rephrase your question or contact legal counsel directly."] }
             });
         } finally {
             setIsAnalyzingLegal(false);
@@ -1254,23 +1273,23 @@ export default function App() { // Renamed from SchoolShieldDashboard to App
 
     const DASHBOARD = (
         <div className="flex flex-col gap-8 max-w-4xl mx-auto">
-            <Card className="shadow-2xl border-0 hover:shadow-3xl transition-shadow" style={{ background: "#4B5C64" }}>
-                <CardContent className="p-6" style={{ color: "#fff" }}>
+            <div className="shadow-2xl border-0 hover:shadow-3xl transition-shadow" style={{ background: "#4B5C64" }}>
+                <div className="p-6" style={{ color: "#fff" }}>
                     <SectionHeader icon={<Shield className="text-blue-600" size={28} />} title="Welcome" />
                     <div className="text-lg text-white mb-3 space-y-4">
                         <p><strong>Navigation IQ<sup style={{ fontSize: '0.6em' }}>TM</sup> is the new standard in dynamic policy, guidance, and risk management for school leaders.</strong></p>
                         <p>Our System has been designed with input from  school leaders as an intelligence based Micro Utility providing proactive clarity and solutions for risk management, policy guidance, industry insights, and counsel, empowering school leaders with efficient certainty to stay ahead of day-to-day challenges.</p>
                         <p>Resolve faculty/student/parent issues and complaints, navigate legal complexities, identify handbook vulnerabilities, and protect your school community, while saving time, reducing costs, and strengthening your leadership impact.</p>
                     </div>
-                </CardContent>
-            </Card>
+                </div>
+            </div>
         </div>
     );
 
     const HANDBOOK = (
         <div className="max-w-2xl mx-auto space-y-8">
-            <Card className="shadow-2xl border-0" style={{ background: "#4B5C64" }}>
-                <CardContent className="p-6" style={{ color: "#fff" }}>
+            <div className="shadow-2xl border-0" style={{ background: "#4B5C64" }}>
+                <div className="p-6" style={{ color: "#fff" }}>
                     <SectionHeader icon={<BookOpen className="text-[#faecc4]" size={26} />} title="Handbook Analysis" />
                     
                     {/* --- Feature 1: Select by Section --- */}
@@ -1279,8 +1298,8 @@ export default function App() { // Renamed from SchoolShieldDashboard to App
                         <div className="mb-2">
                             <label className="block font-medium">Select Section</label>
                             <select
-                                className="mt-1 block w-full border rounded p-2 shadow"
-                                style={{ background: "#fff", color: "#222", border: "2px solid #faecc4" }}
+                                className="mt-1 block w-full border rounded p-2 shadow text-black"
+                                style={{ background: "#fff", border: "2px solid #faecc4" }}
                                 value={selectedSection}
                                 onChange={e => {
                                     setSelectedSection(e.target.value);
@@ -1297,7 +1316,7 @@ export default function App() { // Renamed from SchoolShieldDashboard to App
                             <span className="ml-2 text-xs" style={{ color: "#fff" }}>(Click to show/hide full Handbook Section language)</span>
                         </div>
                         {isSectionLanguageOpen && (
-                            <div className="bg-slate-100 p-4 rounded-xl mb-4 shadow-inner border border-slate-200 whitespace-pre-line" style={{ color: "#222", maxHeight: "320px", overflowY: "auto", fontSize: "1rem", lineHeight: "1.55" }}>
+                            <div className="bg-slate-100 p-4 rounded-xl mb-4 shadow-inner border border-slate-200 whitespace-pre-line text-black" style={{ maxHeight: "320px", overflowY: "auto", fontSize: "1rem", lineHeight: "1.55" }}>
                                 {handbookSectionLanguage[selectedSection]}
                             </div>
                         )}
@@ -1312,7 +1331,7 @@ export default function App() { // Renamed from SchoolShieldDashboard to App
                             ))}
                         </ul>
                          <div className="flex justify-end mt-4">
-                            <Button
+                            <button
                                 className="bg-blue-700 hover:bg-blue-800 text-white font-semibold px-6 py-2 rounded-xl shadow-lg flex items-center gap-2 transition-all"
                                 onClick={() => {
                                     const s = demoHandbookSections.find(s => s.section === selectedSection);
@@ -1323,7 +1342,7 @@ export default function App() { // Renamed from SchoolShieldDashboard to App
                             >
                                 <TrendingUp size={18} className="text-white opacity-80" />
                                 Suggested Handbook Changes
-                            </Button>
+                            </button>
                         </div>
                     </div>
 
@@ -1333,28 +1352,28 @@ export default function App() { // Renamed from SchoolShieldDashboard to App
                     <div>
                         <h3 className="text-lg font-bold mb-2" style={{ color: "#faecc4" }}>2. Search Handbook by Topic</h3>
                         <p className="mb-4 text-white">Select a Topic from the Handbook to see the Associated Section and language.</p>
-                        <Textarea
+                        <textarea
                             placeholder="e.g., Confidentiality, Remote Work, Discipline..."
-                            className="mb-2"
-                            style={{ background: "#fff", color: "#222", border: "2px solid #faecc4" }}
+                            className="mb-2 w-full p-2 rounded-md text-black"
+                            style={{ background: "#fff", border: "2px solid #faecc4" }}
                             value={handbookTopicQuery}
                             onChange={e => setHandbookTopicQuery(e.target.value)}
                         />
-                        <Button
+                        <button
                             className="bg-blue-700 hover:bg-blue-800 text-white font-semibold px-6 py-2 rounded-xl shadow-lg"
                             onClick={handleTopicSearch}
                             disabled={isAnalyzingTopic}
                         >
                             {isAnalyzingTopic ? "Analyzing..." : "Analyze Handbook"}
-                        </Button>
+                        </button>
 
                         {handbookTopicResults && (
                             <div className="mt-6">
                                 <div className="flex justify-between items-center mb-2">
                                     <h4 className="font-bold text-white">Results for "{handbookTopicQuery}"</h4>
-                                    <Button variant="ghost" size="sm" className="text-white hover:bg-gray-600" onClick={() => { setHandbookTopicResults(null); setHandbookTopicQuery(""); }}>
+                                    <button className="text-white hover:bg-gray-600 p-1 rounded-md" onClick={() => { setHandbookTopicResults(null); setHandbookTopicQuery(""); }}>
                                         Clear Results
-                                    </Button>
+                                    </button>
                                 </div>
                                 <div 
                                     className="bg-slate-100 p-4 rounded-xl shadow-inner border border-slate-200 space-y-4" 
@@ -1378,8 +1397,8 @@ export default function App() { // Renamed from SchoolShieldDashboard to App
                             </div>
                         )}
                     </div>
-                </CardContent>
-            </Card>
+                </div>
+            </div>
             <HandbookAuditCard />
             <HandbookVulnerabilitiesCard sections={demoHandbookSections} />
         </div>
@@ -1387,8 +1406,8 @@ export default function App() { // Renamed from SchoolShieldDashboard to App
 
     const ALERTS = (
         <div className="max-w-2xl mx-auto space-y-8">
-            <Card className="shadow-2xl border-0 rounded-2xl" style={{ background: "#4B5C64", color: "#fff" }}>
-                <CardContent className="p-6">
+            <div className="shadow-2xl border-0 rounded-2xl" style={{ background: "#4B5C64", color: "#fff" }}>
+                <div className="p-6">
                     <SectionHeader icon={<Bell className="text-[#faecc4]" size={26} />} title="All Alerts" />
                      <div className="mb-6 text-white space-y-4">
                         <p><strong>Below are current alerts gathered from several direct resources.</strong></p>
@@ -1401,12 +1420,12 @@ export default function App() { // Renamed from SchoolShieldDashboard to App
                                     <p>{a.text} <span className="text-sm text-gray-400">- {formatDate(a.date)}</span></p>
                                     {a.hasButton && (
                                         <div className="flex justify-start mt-2">
-                                            <Button
+                                            <button
                                                 className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-1 rounded-lg text-xs"
                                                 onClick={() => handleShowSuggestion(a)}
                                             >
                                                 Handbook Consideration
-                                            </Button>
+                                            </button>
                                         </div>
                                     )}
                                 </div>
@@ -1414,15 +1433,15 @@ export default function App() { // Renamed from SchoolShieldDashboard to App
                             </React.Fragment>
                         ))}
                     </div>
-                </CardContent>
-            </Card>
+                </div>
+            </div>
         </div>
     );
 
     const TRENDS = (
         <div className="max-w-2xl mx-auto space-y-8">
-            <Card className="shadow-2xl border-0 rounded-2xl" style={{ background: "#4B5C64", color: "#fff" }}>
-                <CardContent className="p-6">
+            <div className="shadow-2xl border-0 rounded-2xl" style={{ background: "#4B5C64", color: "#fff" }}>
+                <div className="p-6">
                     <SectionHeader icon={<TrendingUp className="text-[#faecc4]" size={26} />} title="Industry Trends & Legislation" />
                     <div className="mb-6 text-white space-y-4">
                         <p><strong>Below are current industry trends and legislation articles and information gathered from several direct resources.</strong></p>
@@ -1435,12 +1454,12 @@ export default function App() { // Renamed from SchoolShieldDashboard to App
                                     <p>{t.text} <span className="text-sm text-gray-400">- {formatDate(t.date)}</span></p>
                                     {t.hasButton && (
                                         <div className="flex justify-start mt-2">
-                                            <Button
+                                            <button
                                                 className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-1 rounded-lg text-xs"
                                                 onClick={() => handleShowSuggestion(t)}
                                             >
                                                 Handbook Consideration
-                                            </Button>
+                                            </button>
                                         </div>
                                     )}
                                 </div>
@@ -1448,15 +1467,15 @@ export default function App() { // Renamed from SchoolShieldDashboard to App
                             </React.Fragment>
                         ))}
                     </div>
-                </CardContent>
-            </Card>
+                </div>
+            </div>
         </div>
     );
     
     const HOSQA = (
         <div className="max-w-2xl mx-auto space-y-8">
-            <Card className="shadow-2xl border-0 rounded-2xl" style={{ background: "#4B5C64", color: "#fff" }}>
-                <CardContent className="p-6">
+            <div className="shadow-2xl border-0 rounded-2xl" style={{ background: "#4B5C64", color: "#fff" }}>
+                <div className="p-6">
                     <SectionHeader icon={<MessageCircle className="text-[#faecc4]" size={26} />} title="School Leaders Q&A" />
                      <div className="mb-6 text-white font-bold space-y-2">
                         <p>Below you can ask specific questions by selecting a topic or generating your own question.</p>
@@ -1464,30 +1483,29 @@ export default function App() { // Renamed from SchoolShieldDashboard to App
                     </div>
                     <div className="mb-4 flex gap-2">
                         {hosQaTopics.map((topic) => (
-                            <Button
+                            <button
                                 key={topic}
                                 onClick={() => setHosQaTab(topic)}
-                                className={`rounded-lg transition-all ${hosQaTab === topic ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+                                className={`px-3 py-1 rounded-lg transition-all ${hosQaTab === topic ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
                             >
                                 {topic}
-                            </Button>
+                            </button>
                         ))}
                     </div>
-                    <Textarea
+                    <textarea
                         placeholder="e.g. What are our obligations under FERPA if a parent requests to see another student's disciplinary records?"
-                        className="mb-2 min-h-[100px]"
-                        style={{ background: "#fff", color: "#222", border: "2px solid #faecc4" }}
+                        className="mb-2 min-h-[100px] w-full p-2 rounded-md text-black"
+                        style={{ background: "#fff", border: "2px solid #faecc4" }}
                         value={hosQaQuestion}
                         onChange={e => setHosQaQuestion(e.target.value)}
                     />
-                    <Button
-                        size="sm"
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 rounded-lg mb-4"
+                    <button
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 rounded-lg mb-4 py-1"
                         onClick={currentAnswer ? handleHosQaClose : handleHosQaSubmit}
                         disabled={isAnalyzing}
                     >
                         {isAnalyzing ? "Analyzing..." : (currentAnswer ? "Close" : "Submit")}
-                    </Button>
+                    </button>
 
                     {submittedQuestion && (
                         <div className="mt-4 space-y-4">
@@ -1495,15 +1513,15 @@ export default function App() { // Renamed from SchoolShieldDashboard to App
                                 <p className="font-semibold">{submittedQuestion}</p>
                                 {isAnalyzing && <p className="text-sm text-yellow-400 mt-2">Analyzing...</p>}
                                 {currentAnswer && (
-                                     <div className="mt-3 p-3 bg-gray-800 rounded-md border-l-4 border-blue-400 whitespace-pre-line">
-                                        <p className="text-sm">{currentAnswer}</p>
+                                     <div className="mt-3 p-3 bg-gray-800 rounded-md border-l-4 border-blue-400">
+                                        <AIContentRenderer content={currentAnswer} />
                                     </div>
                                 )}
                             </div>
                         </div>
                     )}
-                </CardContent>
-            </Card>
+                </div>
+            </div>
 
             <IndustryQuestionsCard />
 
@@ -1512,8 +1530,8 @@ export default function App() { // Renamed from SchoolShieldDashboard to App
 
     const LEGAL = (
         <div className="max-w-2xl mx-auto space-y-8">
-            <Card className="shadow-2xl border-0 rounded-2xl" style={{ background: "#4B5C64", color: "#fff" }}>
-                <CardContent className="p-6">
+            <div className="shadow-2xl border-0 rounded-2xl" style={{ background: "#4B5C64", color: "#fff" }}>
+                <div className="p-6">
                     <SectionHeader icon={<Gavel className="text-[#faecc4]" size={26} />} title="Legal Guidance" />
                     <div className="mb-6 text-white space-y-3">
                         <p><strong>Structured Legal Analysis:</strong> Get preliminary legal guidance on complex legal issues.</p>
@@ -1525,21 +1543,20 @@ export default function App() { // Renamed from SchoolShieldDashboard to App
                         <p className="text-sm pt-2">This tool provides an initial analysis and guidance based on common legal frameworks, but if further information is required, is not a substitute for advice from your school's attorney.</p>
                     </div>
                     <p className="mb-2 font-semibold text-white">Enter a legal question or discussion for analysis...</p>
-                    <Textarea
+                    <textarea
                         placeholder="e.g. We've received a subpoena from a local law firm demanding all of a student's academic and disciplinary records for a custody case. Do we have to comply immediately?"
-                        className="mb-2 min-h-[100px]"
-                        style={{ background: "#fff", color: "#222", border: "2px solid #faecc4" }}
+                        className="mb-2 min-h-[100px] w-full p-2 rounded-md text-black"
+                        style={{ background: "#fff", border: "2px solid #faecc4" }}
                         value={legalQuestion}
                         onChange={e => setLegalQuestion(e.target.value)}
                     />
-                    <Button
-                        size="sm"
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 rounded-lg mb-4"
+                    <button
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 rounded-lg mb-4 py-1"
                         onClick={submittedLegalQuestion ? handleLegalQaClose : handleLegalQaSubmit}
                         disabled={isAnalyzingLegal}
                     >
                         {isAnalyzingLegal ? "Analyzing..." : (submittedLegalQuestion ? "Close" : "Submit for Analysis")}
-                    </Button>
+                    </button>
 
                     {submittedLegalQuestion && (
                         <div className="mt-4 p-4 bg-gray-700 rounded-lg">
@@ -1558,34 +1575,46 @@ export default function App() { // Renamed from SchoolShieldDashboard to App
                                     <div className={`p-3 bg-gray-800 rounded-md border-l-4 ${legalAnswer.risk.level === 'High' ? 'border-red-400' : 'border-yellow-400'}`}>
                                         <h4 className={`font-bold ${legalAnswer.risk.level === 'High' ? 'text-red-300' : 'text-yellow-300'} mb-1`}>Risk Analysis & Recommendation</h4>
                                         <p className="mb-2">{legalAnswer.risk.analysis}</p>
-                                        <p className="font-semibold">{legalAnswer.risk.recommendation}</p>
+                                        <ol className="list-decimal list-inside space-y-1">
+                                            {legalAnswer.risk.recommendation.map((step, i) => {
+                                                const parts = step.split(/(\*\*.*?\*\*)/g).filter(Boolean);
+                                                return (
+                                                    <li key={i}>
+                                                        {parts.map((part, j) => 
+                                                            part.startsWith('**') && part.endsWith('**') ? 
+                                                            <strong key={j} className="text-[#faecc4]">{part.slice(2, -2)}</strong> : 
+                                                            <span key={j}>{part}</span>
+                                                        )}
+                                                    </li>
+                                                );
+                                            })}
+                                        </ol>
                                     </div>
                                 </div>
                             )}
                         </div>
                     )}
-                </CardContent>
-            </Card>
-            <Card className="shadow-2xl border-0 rounded-2xl" style={{ background: "#4B5C64", color: "#fff" }}>
-                <CardContent className="p-6">
+                </div>
+            </div>
+            <div className="shadow-2xl border-0 rounded-2xl" style={{ background: "#4B5C64", color: "#fff" }}>
+                <div className="p-6">
                     <SectionHeader icon={<Gavel className="text-[#faecc4]" size={26} />} title="Get Direct Legal Help" />
                     <div className="mb-3">
                         Reach out for legal counsel about your issue. Begin by adding a brief overview below, and click submit to schedule a phone conference.<br />
                         <span className="text-blue-400 text-xs">(Annual Legal Counsel Credits will be applied if applicable.)</span>
                     </div>
-                    <Textarea
-                        className="w-full min-h-[100px] border rounded-md mb-2"
+                    <textarea
+                        className="w-full min-h-[100px] border rounded-md mb-2 p-2 text-black"
                         placeholder="Briefly describe your legal issue or question..."
-                        style={{ background: "#fff", color: "#222", border: "2px solid #faecc4" }}
+                        style={{ background: "#fff", border: "2px solid #faecc4" }}
                     />
-                    <Button
-                        size="lg"
+                    <button
                         className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg mt-2"
                     >
                         Submit &amp; Schedule Call
-                    </Button>
-                </CardContent>
-            </Card>
+                    </button>
+                </div>
+            </div>
         </div>
     );
 
@@ -1653,9 +1682,8 @@ export default function App() { // Renamed from SchoolShieldDashboard to App
             <div className="flex flex-1 min-h-0">
                 <aside className="border-r pt-2 px-4 flex flex-col gap-2 min-w-[230px] shadow-md" style={{ background: "#7c2d2d" }}>
                     {SIDEBAR_LINKS.map(link => (
-                        <Button
+                        <button
                             key={link.key}
-                            variant="ghost"
                             className="flex items-center gap-3 px-5 py-2 w-full justify-start text-base font-semibold rounded-lg shadow border-2 border-white transition-all"
                             style={{
                                 background: page === link.key ? "#7c2d2d" : "#fff",
@@ -1666,7 +1694,7 @@ export default function App() { // Renamed from SchoolShieldDashboard to App
                         >
                             {React.cloneElement(link.icon, { color: page === link.key ? "#fff" : "#7c2d2d" })}
                             {link.label}
-                        </Button>
+                        </button>
                     ))}
                 </aside>
 
@@ -1689,10 +1717,10 @@ export default function App() { // Renamed from SchoolShieldDashboard to App
                         </h3>
                         <div className="mb-6 text-slate-700 font-medium whitespace-pre-line">{suggestedUpdate}</div>
                         <div className="flex justify-end gap-2">
-                            <Button variant="outline" onClick={() => setShowSuggestionModal(false)} className="rounded-lg px-5">Cancel</Button>
-                            <Button className="bg-blue-700 hover:bg-blue-800 text-white font-semibold px-5 rounded-lg" onClick={() => { setShowSuggestionModal(false); console.log(`Suggestion for "${suggestionSectionRef.current}" recorded.`); }}>
+                            <button className="rounded-lg px-5 py-2 border border-gray-300" onClick={() => setShowSuggestionModal(false)}>Cancel</button>
+                            <button className="bg-blue-700 hover:bg-blue-800 text-white font-semibold px-5 rounded-lg py-2" onClick={() => { setShowSuggestionModal(false); console.log(`Suggestion for "${suggestionSectionRef.current}" recorded.`); }}>
                                 Add Suggestion to Handbook
-                            </Button>
+                            </button>
                         </div>
                     </div>
                 </div>
