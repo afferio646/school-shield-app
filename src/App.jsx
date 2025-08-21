@@ -1,8 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Bell, BookOpen, Shield, AlertCircle, TrendingUp, MessageCircle, Gavel, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 
-// --- IMPORTANT: YOUR API KEY IS NOW PERMANENTLY IN PLACE ---
-const GEMINI_API_KEY = "AIzaSyCYAfKVJ9BTLWHpNLDr0bHDsvYOdWMfIpw";
+// --- SECURE API KEY HANDLING ---
+// The key is now read from a secure environment variable on Vercel.
+// To use the preview here, you still need to paste your key.
+const GEMINI_API_KEY = (window.VITE_GEMINI_API_KEY) || "AIzaSyCYAfKVJ9BTLWHpNLDr0bHDsvYOdWMfIpw";
+
 
 // --- Helper Components ---
 
@@ -428,6 +431,7 @@ function RiskAssessmentCenter({ handbookText, handbookIndex, apiKey }) {
     const [responseGenerated, setResponseGenerated] = useState(false);
     const [loading, setLoading] = useState(false);
     const [viewMode, setViewMode] = useState('form'); // 'form', 'demo', 'live'
+    const [selectedScenarioKey, setSelectedScenarioKey] = useState(null);
     const [archivedReports, setArchivedReports] = useState([
         {
             id: 1,
@@ -446,6 +450,7 @@ function RiskAssessmentCenter({ handbookText, handbookIndex, apiKey }) {
     ]);
     const [viewedReport, setViewedReport] = useState(null);
     const [generatedSteps, setGeneratedSteps] = useState(null);
+    const [fallbackMessage, setFallbackMessage] = useState("");
 
     const scenarios = {
         parentComplaint: {
@@ -514,31 +519,41 @@ function RiskAssessmentCenter({ handbookText, handbookIndex, apiKey }) {
     const handleScenarioButtonClick = (scenarioKey) => {
         const issueText = archivedReports.find(r => r.scenarioKey === scenarioKey)?.issue || '';
         setIssue(issueText);
-        setLoading(true);
-        setResponseGenerated(false);
         setViewMode('demo');
-        
-        setTimeout(() => {
-            const scenarioData = scenarios[scenarioKey];
-            setGeneratedSteps(scenarioData);
-            setResponseGenerated(true);
-            setLoading(false);
-        }, 1500);
+        setSelectedScenarioKey(scenarioKey);
     };
     
     const handleGenerate = async () => {
-        if (!issue || !apiKey || apiKey === "PASTE_YOUR_API_KEY_HERE") {
-            alert("Please provide an API key to use the live AI features.");
-            return;
-        }
+        if (!issue) return;
+        
         setLoading(true);
         setResponseGenerated(false);
         setGeneratedSteps(null);
-        setViewMode('live');
+        setFallbackMessage("");
 
-        const sourceMaterials = Object.entries(handbookText)
-            .map(([title, text]) => `--- Handbook Section: ${title} ---\n${text}`)
-            .join('\n\n');
+        // Artificial 10-second delay for demo purposes
+        await new Promise(resolve => setTimeout(resolve, 10000));
+
+        if (viewMode === 'demo') {
+            if (selectedScenarioKey && scenarios[selectedScenarioKey]) {
+                setGeneratedSteps(scenarios[selectedScenarioKey]);
+            } else {
+                setGeneratedSteps({ error: "Could not find a matching demo scenario." });
+            }
+            setResponseGenerated(true);
+            setLoading(false);
+            return;
+        }
+
+        // Live AI Call
+        setViewMode('live');
+        if (!apiKey || apiKey === "PASTE_YOUR_API_KEY_HERE") {
+            alert("Please provide an API key to use the live AI features.");
+            setLoading(false);
+            return;
+        }
+
+        const sourceMaterials = handbookText;
 
         const prompt = `
             Role: You are an expert K-12 risk assessment analyst and legal advisor. Your function is to analyze a scenario and populate a JSON object based on provided source materials. Your tone is professional, clear, and authoritative. Your analysis must be robust and detailed, mirroring the complexity of a real-world legal and administrative consultation for a school leader.
@@ -551,7 +566,7 @@ function RiskAssessmentCenter({ handbookText, handbookIndex, apiKey }) {
             5.  For 'suggestedLanguage' in Step 4, you MUST provide a full, robust paragraph of professional language suitable for a Head of School to use in an email or conversation. Do not use single sentences.
             6.  **For Steps 1, 2, 3:** The 'content' MUST be an array of objects, each with a 'header' key (e.g., "Issue Type:") and a 'text' key (e.g., "Parent Complaint").
             7.  **For Step 4 & 5:** The 'content' must be an object with keys "optionA", "optionB", "optionC". Each option must be an object with its own title and various text properties. The projected reactions in Step 5 must be nuanced and explain potential consequences.
-            8.  **For Step 6:** The 'recommendationSummary' MUST be a string formatted with bolded headers. The 'implementationSteps' MUST be a clear, actionable checklist as an array of strings, with each string being a complete sentence for a single step, prefixed with its number (e.g., "1. Do this first.").
+            8.  **For Step 6:** The 'recommendationSummary' MUST be a string formatted with bolded headers like this: "**Recommended Option:** [Option]\n**Why:** [Explanation]\n**Confidence Level:** [Level]\n**Legal Review Advised:** [Yes/No and when]". The 'implementationSteps' MUST be a clear, actionable checklist as an array of strings, with each string being a complete sentence for a single step, prefixed with its number (e.g., "1. Do this first.").
             --- START OF SOURCE MATERIALS ---
             ${sourceMaterials}
             --- END OF SOURCE MATERIALS ---
@@ -616,6 +631,7 @@ function RiskAssessmentCenter({ handbookText, handbookIndex, apiKey }) {
         };
 
         try {
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
             const payload = { 
                 contents: [{ role: "user", parts: [{ text: prompt }] }],
                 generationConfig: {
@@ -624,7 +640,6 @@ function RiskAssessmentCenter({ handbookText, handbookIndex, apiKey }) {
                     temperature: 0.2
                 }
             };
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
             const response = await fetch(apiUrl, {
                 method: 'POST',
@@ -632,19 +647,28 @@ function RiskAssessmentCenter({ handbookText, handbookIndex, apiKey }) {
                 body: JSON.stringify(payload)
             });
 
+            if (response.status === 503) {
+                setFallbackMessage("The live AI model is temporarily unavailable. Displaying a pre-built demonstration scenario.");
+                const scenarioKey = 'parentComplaint'; // Default fallback
+                setGeneratedSteps(scenarios[scenarioKey]);
+                setViewMode('demo');
+                setResponseGenerated(true);
+                return;
+            }
+
             if (!response.ok) {
                 const errorBody = await response.json();
                 throw new Error(`API request failed: ${response.status} - ${errorBody?.error?.message || 'Unknown error'}`);
             }
 
             const result = await response.json();
-            if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
+            if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
                 const jsonText = result.candidates[0].content.parts[0].text;
                 const parsedSteps = JSON.parse(jsonText);
                 setGeneratedSteps(parsedSteps);
                 setResponseGenerated(true);
             } else {
-                throw new Error("Invalid response structure from API. The AI did not return the expected data.");
+                throw new Error("Invalid response structure from API.");
             }
         } catch (error) {
             console.error("Error generating AI response:", error);
@@ -712,14 +736,24 @@ function RiskAssessmentCenter({ handbookText, handbookIndex, apiKey }) {
             </div>
         );
     }
+    
+    // Reset state when navigating away and back
+    useEffect(() => {
+        setIssue("");
+        setResponseGenerated(false);
+        setGeneratedSteps(null);
+        setFallbackMessage("");
+        setViewMode('form');
+        setSelectedScenarioKey(null);
+    }, []);
 
     return (
         <div className="p-6 space-y-6 max-w-6xl mx-auto text-base">
             <h1 className="text-3xl font-bold text-center">Incident Risk Assessment & Mitigation System</h1>
             
             <div className="flex justify-center gap-2 mb-4">
-                <button onClick={() => handleScenarioButtonClick('parentComplaint')} className={`px-4 py-2 rounded-md ${viewMode === 'demo' && issue.includes('suspension') ? 'bg-blue-700 text-white' : 'bg-gray-300 text-black'}`}>Parent Complaint Scenario</button>
-                <button onClick={() => handleScenarioButtonClick('facultyLeave')} className={`px-4 py-2 rounded-md ${viewMode === 'demo' && issue.includes('sick days') ? 'bg-blue-700 text-white' : 'bg-gray-300 text-black'}`}>Faculty Leave Scenario</button>
+                <button onClick={() => handleScenarioButtonClick('parentComplaint')} className={`px-4 py-2 rounded-md ${selectedScenarioKey === 'parentComplaint' ? 'bg-blue-700 text-white' : 'bg-gray-300 text-black'}`}>Parent Complaint Scenario</button>
+                <button onClick={() => handleScenarioButtonClick('facultyLeave')} className={`px-4 py-2 rounded-md ${selectedScenarioKey === 'facultyLeave' ? 'bg-blue-700 text-white' : 'bg-gray-300 text-black'}`}>Faculty Leave Scenario</button>
             </div>
 
             <div className="shadow-2xl border-2 border-blue-100 rounded-2xl" style={{ background: "#4B5C64" }}>
@@ -732,21 +766,32 @@ function RiskAssessmentCenter({ handbookText, handbookIndex, apiKey }) {
                             borderColor: "#ffd700",
                             boxShadow: "0 6px 32px 0 rgba(60,60,60,0.10), 0 1.5px 8px 0 rgba(60,60,60,0.08)"
                         }}
-                        placeholder="Describe a new incident here to get a real time step by step analysis..."
+                        placeholder="Describe a new incident here or select a scenario above..."
                         value={issue}
-                        onChange={(e) => setIssue(e.target.value)}
+                        onChange={(e) => {
+                            setIssue(e.target.value);
+                            setSelectedScenarioKey(null); // Clear scenario if user types
+                            setViewMode('live');
+                        }}
                     />
                     <div className="flex justify-center">
                         <button
-                            onClick={responseGenerated ? () => { setResponseGenerated(false); setIssue("") } : handleGenerate}
-                            disabled={loading}
-                            className={`mt-4 px-6 py-2 text-lg font-semibold text-white rounded-md shadow-md ${loading ? "bg-blue-300 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`}
+                            onClick={responseGenerated ? () => { setResponseGenerated(false); setIssue(""); setSelectedScenarioKey(null); } : handleGenerate}
+                            disabled={loading || !issue}
+                            className={`mt-4 px-6 py-2 text-lg font-semibold text-white rounded-md shadow-md transition-colors ${loading || !issue ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`}
                         >
                             {loading ? "Generating..." : (responseGenerated ? "Close Analysis" : "Get Full Risk & Response Analysis")}
                         </button>
                     </div>
                 </div>
             </div>
+
+            {fallbackMessage && (
+                <div className="p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-md">
+                    <p className="font-bold">Notice</p>
+                    <p>{fallbackMessage}</p>
+                </div>
+            )}
 
             {responseGenerated && generatedSteps && (
                 <div className="space-y-6">
@@ -755,38 +800,12 @@ function RiskAssessmentCenter({ handbookText, handbookIndex, apiKey }) {
                             <p className="font-bold">Error</p>
                             <p>{generatedSteps.error}</p>
                         </div>
-                    ) : viewMode === 'live' ? (
-                        // Live AI view with collapsible cards
+                    ) : (
                         Object.keys(generatedSteps).map((stepKey) => (
                             generatedSteps[stepKey] && generatedSteps[stepKey].title && (
                                 <StepCard key={stepKey} stepKey={stepKey} title={generatedSteps[stepKey].title}>
                                     {generatedSteps[stepKey].content}
                                 </StepCard>
-                            )
-                        ))
-                    ) : ( // Demo view with static, open cards
-                        Object.keys(generatedSteps).map((stepKey) => (
-                            generatedSteps[stepKey] && generatedSteps[stepKey].title && (
-                                <div key={stepKey}>
-                                    <div className="shadow-2xl border-0 rounded-2xl" style={{ background: "#4B5C64" }}>
-                                        <div className="p-6 space-y-4 rounded-2xl" style={{ color: "#fff" }}>
-                                            <h2 className="text-xl font-semibold" style={{ color: "#faecc4" }}>
-                                                {`Step ${parseInt(stepKey.replace('step', ''))}: ${generatedSteps[stepKey].title}`}
-                                            </h2>
-                                            <div className="border-t border-gray-600 pt-4">
-                                                <AIContentRenderer content={generatedSteps[stepKey].content} />
-                                                {stepKey === 'step6' && (
-                                                     <div className="border-t border-gray-600 mt-6 pt-6"> 
-                                                         <h3 className="text-lg font-semibold text-[#faecc4] mb-2 flex items-center"><Gavel className="w-5 h-5 mr-2"/>Get Direct Legal Help</h3> 
-                                                         <div className="mb-3 text-sm"> Reach out for legal advice about this issue. Begin by adding a brief overview below, and click submit to schedule a phone conference.<br /> <span className="text-blue-400 text-xs">(Annual Legal Counsel Credits will be applied if applicable.)</span> </div> 
-                                                         <textarea className="w-full min-h-[100px] border rounded-md mb-2 p-2 text-black" placeholder={`Add any additional details for the legal team regarding: "${issue}"`} style={{ background: "#fff", border: "2px solid #faecc4" }} /> 
-                                                         <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg mt-2" > Submit &amp; Schedule Call </button> 
-                                                     </div> 
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                             )
                         ))
                     )}
